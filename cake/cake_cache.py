@@ -45,6 +45,22 @@ class CakeCache(Cache):
         """
         return len(self.key_cache)
 
+    def to(self, device):
+        """
+        Move the cache to the specified device.
+        """
+        cache = CakeCache()
+        cache._seen_tokens = self._seen_tokens
+        
+        cache.key_cache = [k.to(device) if isinstance(k, torch.Tensor) else k for k in self.key_cache]
+        cache.value_cache = [v.to(device) if isinstance(v, torch.Tensor) else v for v in self.value_cache]
+        
+        cache.pref_scores = [p.to(device) if isinstance(p, torch.Tensor) else p for p in self.pref_scores]
+        cache.evict_scores = [e.to(device) if isinstance(e, torch.Tensor) else e for e in self.evict_scores]
+        cache.layer_budget = self.layer_budget.copy() if hasattr(self.layer_budget, 'copy') else self.layer_budget
+        
+        return cache
+    
     def update(
         self,
         key_states: torch.Tensor,
@@ -174,8 +190,8 @@ class CakeCache(Cache):
             layer_keys = torch.cat([current.key_cache[idx] for current in splits], dim=0)
             layer_values = torch.cat([current.value_cache[idx] for current in splits], dim=0)
             cache.update(layer_keys, layer_values, idx)
-            cache.pref_scores = self.pref_scores
-            cache.evict_scores = self.evict_scores
+            cache.pref_scores = splits[0].pref_scores
+            cache.evict_scores = splits[0].evict_scores
         return cache
 
     def batch_repeat_interleave(self, repeats: int):
