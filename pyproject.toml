@@ -18,7 +18,7 @@ dependencies = [
     "accelerate",
     "tqdm==4.66.1",
     "icetk==0.0.7",
-    "transformers==4.43.3"
+    "transformers==5.10.1"
 ]
 
 [tool.setuptools.packages.find]
